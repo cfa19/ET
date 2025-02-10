@@ -55,6 +55,7 @@ def evaluate(ticket, reply):
         return None, None, None, None
 
 tickets_df = pd.read_csv(r"C:\Users\cfa08\OneDrive\Desktop\Examen\tickets.csv")
+# tickets_df = pd.read_csv("C:\\Users\\cfa08\\OneDrive\\Desktop\\Examen\\tickets.csv") #2nd option
 
 
 tickets_df['content_score'], tickets_df['content_explanation'], tickets_df['format_score'], tickets_df['format_explanation'] = zip(*tickets_df.apply(

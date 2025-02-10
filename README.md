@@ -33,7 +33,6 @@ pip install -r requirements.txt
     
 ## Deployment
 
-
 ```bash
 Create .env with OpenAI API key:
 ```
