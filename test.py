@@ -1,34 +1,19 @@
 import unittest
 import os
+import pandas as pd
 import csv
+from ET import evaluate
+import openai
 
-
-def read_csv(file_path):
-    with open(file_path, 'r') as file:
-        reader = csv.DictReader(file)
-        return [row for row in reader]
-
-
-
-def write_csv(file_path, data):
-    with open(file_path, 'w', newline='') as file:
-        fieldnames = data[0].keys()
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(data)
-        
-        
-
-class TestCSVFunctions(unittest.TestCase):
+class TestEvaluateFunction(unittest.TestCase):
     def setUp(self):
-        self.test_input = 'test_input.csv'
-        self.test_output = 'test_output.csv'
+        self.test_input = 'tickets.csv'
+        self.test_output = 'tickets_evaluated.csv'
         self.test_data = [
             {'ticket': 'How to install Python?', 'reply': 'You can download Python from the official website.'},
             {'ticket': 'What is OpenAI?', 'reply': 'OpenAI is a research company focused on AI.'}
         ]
-
-
+        
         with open(self.test_input, 'w', newline='') as file:
             fieldnames = ['ticket', 'reply']
             writer = csv.DictWriter(file, fieldnames=fieldnames)
@@ -36,24 +21,19 @@ class TestCSVFunctions(unittest.TestCase):
             writer.writerows(self.test_data)
 
 
-    def test_read_csv(self):
-        data = read_csv(self.test_input)
-        self.assertEqual(len(data), 2)  
-        self.assertEqual(data[0]['ticket'], 'How to install Python?')  
-        self.assertEqual(data[1]['reply'], 'OpenAI is a research company focused on AI.') 
+    def test_evaluate_function(self):
+        tickets_df = pd.read_csv(self.test_input)
+        self.assertEqual(len(tickets_df), 2)
 
+        tickets_df['content_score'], tickets_df['content_explanation'], tickets_df['format_score'], tickets_df['format_explanation'] = zip(*tickets_df.apply(
+            lambda row: evaluate(row['ticket'], row['reply']), axis=1))
 
+        tickets_df.to_csv(self.test_output, index=False)
 
-    def test_write_csv(self):
-        write_csv(self.test_output, self.test_data)
-        with open(self.test_output, 'r') as file:
-            reader = csv.DictReader(file)
-            result_data = [row for row in reader]
-        self.assertEqual(len(result_data), 2)  
-        self.assertEqual(result_data[0]['ticket'], 'How to install Python?')  
-        self.assertEqual(result_data[1]['reply'], 'OpenAI is a research company focused on AI.')  
-
-
+        output_df = pd.read_csv(self.test_output)
+        self.assertEqual(len(output_df), 2)
+        self.assertIn('content_score', output_df.columns)
+        self.assertIn('format_score', output_df.columns)
 
     def tearDown(self):
         if os.path.exists(self.test_input):
